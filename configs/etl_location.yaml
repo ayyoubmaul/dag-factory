@@ -1,0 +1,29 @@
+airflow:
+  dag_id: etl_pipeline_location
+  start_date: '2023-07-01'
+  schedule_interval: "@weekly"
+
+tasks:
+  - task_id: extract
+    operator: airflow.operators.python.PythonOperator
+    params:
+      python_callable: process_data.extract_data
+      op_kwargs:
+        file: '/opt/airflow/data/jobs.csv'
+
+  - task_id: transform
+    operator: airflow.operators.python.PythonOperator
+    params:
+      python_callable: process_data.transform_data
+      op_kwargs:
+        filter: location
+        value: 'Jakarta Barat'
+    upstream: [extract]
+
+  - task_id: load
+    operator: airflow.operators.python.PythonOperator
+    params:
+      python_callable: process_data.load_data
+      op_kwargs:
+        output: '/opt/airflow/output/transformed_location.json'
+    upstream: [transform]
